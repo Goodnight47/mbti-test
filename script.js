@@ -420,10 +420,6 @@ function showResult() {
   // 职业方向
   document.getElementById("rCareers").textContent = data.careers;
 
-  // 评分详情
-  document.getElementById("scoringHint").textContent =
-    "(加权计分 A=3分  B=1分  C=1分  D=3分  ·  每维度 8 题范围 0~24 分  ·  平局倾向 I/N/F/P)";
-
   const bars = document.getElementById("resultBars");
   bars.innerHTML = "";
   const dimLabels = [
