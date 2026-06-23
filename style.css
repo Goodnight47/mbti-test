@@ -193,14 +193,59 @@ body {
   color: var(--muted);
   line-height: 1.7;
   max-width: 400px;
-  margin: 0 auto 32px;
+  margin: 0 auto 28px;
 }
+
+.r-section {
+  text-align: left;
+  margin: 0 auto 24px;
+  max-width: 440px;
+}
+.r-section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.r-traits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.trait-col h4 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.trait-col.strengths h4 { color: #34d399; }
+.trait-col.growth h4 { color: #f59e0b; }
+.trait-col ul {
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.trait-col ul li::before { content: "· "; color: var(--accent2); }
+
+.r-careers {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .r-bars {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 360px;
-  margin: 0 auto 36px;
+  max-width: 440px;
+  margin: 12px auto 0;
+}
+.scoring-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
 }
 .bar-item { text-align: left; }
 .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
@@ -225,4 +270,6 @@ body {
   .type-preview span { width: 42px; height: 42px; font-size: 18px; }
   .q-text { font-size: 17px; }
   .r-type { font-size: 44px; }
+  .r-traits { grid-template-columns: 1fr; }
+  .r-card { padding: 36px 18px 32px; }
 }
