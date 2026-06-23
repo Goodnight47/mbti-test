@@ -155,15 +155,33 @@ body {
 .q-options { display: flex; flex-direction: column; gap: 12px; }
 .opt {
   width: 100%;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 15px;
+  font-size: 14.5px;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  line-height: 1.5;
+}
+.opt-label {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(124,92,252,0.12);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
 }
 .opt:hover { border-color: var(--accent); background: rgba(124,92,252,0.06); }
 .opt:active { transform: scale(0.98); }

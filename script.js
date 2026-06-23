@@ -1,143 +1,209 @@
-// ========== MBTI 32 题测试 ==========
-// 评分算法：每个维度 8 题，每题选一个方向 +1 分
-// 百分比 = 该方向得分 / 该维度总题数 × 100%
-// 平局打破规则：倾向于 I, N, F, P（社会中相对少数，需更大偏好强度）
+// ========== MBTI 32 题 × 4 选项测试 ==========
+// 评分算法：加权计分制（A=+3, B=+1, C=+1, D=+3）
+// 每个维度 8 题，每题 4 选 1
+// A=强烈倾向第一极  B=轻微倾向第一极  C=轻微倾向第二极  D=强烈倾向第二极
+// 百分比 = 该极加权得分 / 两极加权总得分 × 100%
+// 平局规则：4:4 原始票数 → 倾向 I、N、F、P（社会中相对少数）
 
 const questions = [
-  // ===== E/I 维度 (8题) =====
+  // ===== E/I 维度 (8题，每题 A/B→E  C/D→I) =====
   { text: "周末你更倾向于怎样度过？", dim: "EI", options: [
-    { text: "约朋友聚会、参加活动，人越多越开心", value: "E" },
-    { text: "一个人看书、追剧，享受独处时光", value: "I" }
+    { label: "A", text: "约朋友聚会、参加活动，人越多越开心", value: "E", weight: 3 },
+    { label: "B", text: "和一两个好友小聚，轻松聊聊天", value: "E", weight: 1 },
+    { label: "C", text: "大部分时间独处，偶尔和朋友联系", value: "I", weight: 1 },
+    { label: "D", text: "完全一个人待着，看书追剧充电", value: "I", weight: 3 }
   ]},
-  { text: "在一个大型社交场合，你通常会：", dim: "EI", options: [
-    { text: "主动和陌生人多聊几句，拓展人脉", value: "E" },
-    { text: "先观察，只和熟悉的人交流", value: "I" }
+  { text: "在大型社交场合，你通常会：", dim: "EI", options: [
+    { label: "A", text: "主动结识新朋友，人群越热闹越有活力", value: "E", weight: 3 },
+    { label: "B", text: "和认识的人聊天为主，顺便认识一两个新朋友", value: "E", weight: 1 },
+    { label: "C", text: "安静待在角落，只和熟悉的几个朋友来往", value: "I", weight: 1 },
+    { label: "D", text: "尽量避免这种场合，觉得消耗精力", value: "I", weight: 3 }
   ]},
-  { text: "哪种描述更符合你的沟通方式？", dim: "EI", options: [
-    { text: "边想边说，在表达中理清思路", value: "E" },
-    { text: "想好了再说，心里先打一遍腹稿", value: "I" }
+  { text: "你更倾向于哪种沟通方式？", dim: "EI", options: [
+    { label: "A", text: "边说边想，讲的过程中思路越来越清晰", value: "E", weight: 3 },
+    { label: "B", text: "大概想好怎么说就直接讲出来", value: "E", weight: 1 },
+    { label: "C", text: "先在心里推敲几遍，想清楚再说", value: "I", weight: 1 },
+    { label: "D", text: "能用写的绝不用说的，文字比说话精确", value: "I", weight: 3 }
   ]},
-  { text: "累了一天，如何恢复精力？", dim: "EI", options: [
-    { text: "找朋友聚聚、出去走走，和人互动", value: "E" },
-    { text: "关掉手机、自己安静待着", value: "I" }
+  { text: "累了的时候，怎么恢复精力？", dim: "EI", options: [
+    { label: "A", text: "找朋友一起出去逛逛，热闹的环境让我回血", value: "E", weight: 3 },
+    { label: "B", text: "跟家人或对象一起吃顿饭聊聊天", value: "E", weight: 1 },
+    { label: "C", text: "关掉手机、瘫在沙发上刷剧听歌", value: "I", weight: 1 },
+    { label: "D", text: "完全与世隔绝地独处，任何人都不联系", value: "I", weight: 3 }
   ]},
-  { text: "小组讨论时，你更倾向于：", dim: "EI", options: [
-    { text: "积极发言，带动讨论氛围", value: "E" },
-    { text: "仔细听，偶尔在关键点发言", value: "I" }
+  { text: "小组讨论时，你的表现是：", dim: "EI", options: [
+    { label: "A", text: "随时随地都有想法，忍不住要分享出来", value: "E", weight: 3 },
+    { label: "B", text: "有好的想法就发言，没有就听别人讲", value: "E", weight: 1 },
+    { label: "C", text: "多听少说，只在关键处插一两句", value: "I", weight: 1 },
+    { label: "D", text: "从头到尾专注听，几乎不怎么发言", value: "I", weight: 3 }
   ]},
   { text: "遇到困难时，你的第一反应是：", dim: "EI", options: [
-    { text: "找朋友倾诉，听听别人的建议", value: "E" },
-    { text: "自己先消化，理清思路再行动", value: "I" }
+    { label: "A", text: "立刻打电话找朋友倾诉，听听各种建议", value: "E", weight: 3 },
+    { label: "B", text: "跟最亲近的一两个人聊聊", value: "E", weight: 1 },
+    { label: "C", text: "先自己消化，想清楚了再选择性分享", value: "I", weight: 1 },
+    { label: "D", text: "自己解决就好，不想麻烦别人", value: "I", weight: 3 }
   ]},
-  { text: "对于结识新朋友，你的态度是：", dim: "EI", options: [
-    { text: "很兴奋，朋友圈越大越好", value: "E" },
-    { text: "随缘，几个深交的朋友就够了", value: "I" }
+  { text: "对于社交的态度，哪种最接近你？", dim: "EI", options: [
+    { label: "A", text: "社交是必需品，认识新朋友让我很兴奋", value: "E", weight: 3 },
+    { label: "B", text: "喜欢社交，但不是非得一直在人群里", value: "E", weight: 1 },
+    { label: "C", text: "有几个深交的朋友就够了，社交适可而止", value: "I", weight: 1 },
+    { label: "D", text: "可以一个月不出门不见人，完全不觉得闷", value: "I", weight: 3 }
   ]},
-  { text: "工作时，你更喜欢哪种环境？", dim: "EI", options: [
-    { text: "开放式工位，随时能和人交流", value: "E" },
-    { text: "独立空间，能专注思考不被打扰", value: "I" }
+  { text: "理想的工作环境是：", dim: "EI", options: [
+    { label: "A", text: "开放式办公室，随时能和同事互动讨论", value: "E", weight: 3 },
+    { label: "B", text: "有独立工位但也能随时找同事交流", value: "E", weight: 1 },
+    { label: "C", text: "独立办公室或隔间，专注做自己的事", value: "I", weight: 1 },
+    { label: "D", text: "在家远程办公，完全不受打扰地深度工作", value: "I", weight: 3 }
   ]},
 
-  // ===== S/N 维度 (8题) =====
+  // ===== S/N 维度 (8题，每题 A/B→S  C/D→N) =====
   { text: "解决新问题时，你更依赖什么？", dim: "SN", options: [
-    { text: "过往经验和已验证的可靠方法", value: "S" },
-    { text: "直觉和灵感，尝试全新思路", value: "N" }
+    { label: "A", text: "完全是过往经验，做过的方法才靠谱", value: "S", weight: 3 },
+    { label: "B", text: "以经验为基础，稍作调整和创新", value: "S", weight: 1 },
+    { label: "C", text: "先凭直觉试试，再参考经验验证", value: "N", weight: 1 },
+    { label: "D", text: "完全相信直觉和灵感，喜欢从零创新", value: "N", weight: 3 }
   ]},
-  { text: "阅读一本书，你最关注什么？", dim: "SN", options: [
-    { text: "情节、细节和人物的具体言行", value: "S" },
-    { text: "隐喻、主题和背后的深层含义", value: "N" }
+  { text: "阅读一本书时，你更关注什么？", dim: "SN", options: [
+    { label: "A", text: "故事的具体情节、细节和人物的言行", value: "S", weight: 3 },
+    { label: "B", text: "情节脉络为主，细节记不住也没关系", value: "S", weight: 1 },
+    { label: "C", text: "隐喻和主题比具体情节更有意思", value: "N", weight: 1 },
+    { label: "D", text: "完全沉浸在书的思想世界，细节记不清", value: "N", weight: 3 }
   ]},
   { text: "哪种工作方式让你更舒适？", dim: "SN", options: [
-    { text: "步骤清晰、有章可循、注重实操", value: "S" },
-    { text: "自由发挥、探索可能性、构思蓝图", value: "N" }
+    { label: "A", text: "必须有清晰的步骤、明确的规则才能安心", value: "S", weight: 3 },
+    { label: "B", text: "有框架就行，细节可以边做边调整", value: "S", weight: 1 },
+    { label: "C", text: "不喜欢被框死，只想了解大方向", value: "N", weight: 1 },
+    { label: "D", text: "完全自由发挥，规则和步骤反而束缚创意", value: "N", weight: 3 }
   ]},
-  { text: "描述一个苹果，你会先说：", dim: "SN", options: [
-    { text: "红色、圆形、光滑的表皮", value: "S" },
-    { text: "健康、象征知识、让人想到牛顿", value: "N" }
+  { text: "描述一个苹果，你最先想到什么？", dim: "SN", options: [
+    { label: "A", text: "红色、圆形、光滑的表皮、咬一口脆脆的", value: "S", weight: 3 },
+    { label: "B", text: "健康的水果，维生素C含量高很好吃", value: "S", weight: 1 },
+    { label: "C", text: "让人想到牛顿、伊甸园、科技logo", value: "N", weight: 1 },
+    { label: "D", text: "知识、诱惑、创新、人类文明发展的符号", value: "N", weight: 3 }
   ]},
   { text: "旅行前做攻略，你的风格是：", dim: "SN", options: [
-    { text: "查具体攻略，记下地址和交通方式", value: "S" },
-    { text: "了解当地文化背景，大概知道就行", value: "N" }
+    { label: "A", text: "详细到每一小时的行程表，酒店餐厅全订好", value: "S", weight: 3 },
+    { label: "B", text: "查好主要景点和交通，留一些自由空间", value: "S", weight: 1 },
+    { label: "C", text: "了解当地文化和背景，到了随走随逛", value: "N", weight: 1 },
+    { label: "D", text: "机票酒店搞定就行，剩下的听天由命", value: "N", weight: 3 }
   ]},
   { text: "学习中，你更擅长：", dim: "SN", options: [
-    { text: "记忆事实、数据和具体例子", value: "S" },
-    { text: "理解概念、模型和理论框架", value: "N" }
+    { label: "A", text: "记忆事实、数据和具体案例", value: "S", weight: 3 },
+    { label: "B", text: "从具体例子出发，自己总结规律", value: "S", weight: 1 },
+    { label: "C", text: "先理解理论框架，再用例子验证", value: "N", weight: 1 },
+    { label: "D", text: "直接理解抽象概念和模型，例子可有可无", value: "N", weight: 3 }
   ]},
-  { text: "朋友分享一个创业点子，你首先：", dim: "SN", options: [
-    { text: "想怎么落地执行、需要哪些资源", value: "S" },
-    { text: "想这个模式的潜力和未来前景", value: "N" }
+  { text: "朋友分享事业点子，你首先想到：", dim: "SN", options: [
+    { label: "A", text: "怎么落地、需要什么资源、具体怎么操作", value: "S", weight: 3 },
+    { label: "B", text: "听起来不错，想想怎么一步步实现", value: "S", weight: 1 },
+    { label: "C", text: "这个模式前景很开阔，能做成大方向", value: "N", weight: 1 },
+    { label: "D", text: "甚至联想到更远的未来和跨界可能性", value: "N", weight: 3 }
   ]},
   { text: "你更信任哪种信息？", dim: "SN", options: [
-    { text: "亲眼所见、亲身经历的事实", value: "S" },
-    { text: "逻辑推理和直觉判断", value: "N" }
+    { label: "A", text: "亲眼所见、亲身经历的，眼见为实", value: "S", weight: 3 },
+    { label: "B", text: "可靠数据和一手资料报告", value: "S", weight: 1 },
+    { label: "C", text: "基于事实的推断和专家观点", value: "N", weight: 1 },
+    { label: "D", text: "直觉的第六感往往比数据还准", value: "N", weight: 3 }
   ]},
 
-  // ===== T/F 维度 (8题) =====
-  { text: "朋友向你倾诉烦恼，你的第一反应是：", dim: "TF", options: [
-    { text: "帮 TA 分析问题，给出解决建议", value: "T" },
-    { text: "先共情安慰，让 TA 感到被理解", value: "F" }
+  // ===== T/F 维度 (8题，每题 A/B→T  C/D→F) =====
+  { text: "朋友向你倾诉烦恼，你第一反应：", dim: "TF", options: [
+    { label: "A", text: "直接分析问题，帮忙列出解决方案123", value: "T", weight: 3 },
+    { label: "B", text: "先听再给出建议，保持理性和客观", value: "T", weight: 1 },
+    { label: "C", text: "先表达理解，设身处地为对方难过", value: "F", weight: 1 },
+    { label: "D", text: "抱抱、安慰，陪TA一起消化情绪", value: "F", weight: 3 }
   ]},
   { text: "做重要决定时，你更看重：", dim: "TF", options: [
-    { text: "逻辑、公平和客观事实", value: "T" },
-    { text: "人情、和谐和对身边人的影响", value: "F" }
+    { label: "A", text: "完全以数据和逻辑为依据，不考虑人情", value: "T", weight: 3 },
+    { label: "B", text: "逻辑优先，但也参考一下相关人员感受", value: "T", weight: 1 },
+    { label: "C", text: "感受优先，但也会看看逻辑上通不通", value: "F", weight: 1 },
+    { label: "D", text: "和谐与人情第一，数据再漂亮也不能伤感情", value: "F", weight: 3 }
   ]},
-  { text: "团队讨论有分歧时，你倾向于：", dim: "TF", options: [
-    { text: "分析方案利弊，坚持最优解", value: "T" },
-    { text: "照顾大家感受，寻求共识", value: "F" }
+  { text: "团队讨论出现分歧，你倾向于：", dim: "TF", options: [
+    { label: "A", text: "坚持最优方案，对事不对人直说", value: "T", weight: 3 },
+    { label: "B", text: "分析各方利弊，选最合理的方案", value: "T", weight: 1 },
+    { label: "C", text: "尽量达成共识，照顾到大家的感受", value: "F", weight: 1 },
+    { label: "D", text: "和和气气最重要，方案好坏其次", value: "F", weight: 3 }
   ]},
   { text: "以下哪句更符合你？", dim: "TF", options: [
-    { text: "真相 > 和气", value: "T" },
-    { text: "关系 > 对错", value: "F" }
+    { label: "A", text: "真相第一，哪怕说实话会让人不高兴", value: "T", weight: 3 },
+    { label: "B", text: "该说的实话还是要说，但会注意措辞", value: "T", weight: 1 },
+    { label: "C", text: "不是所有实话都值得说，关系更重要", value: "F", weight: 1 },
+    { label: "D", text: "宁愿说善意的谎言也不伤害对方感情", value: "F", weight: 3 }
   ]},
-  { text: "评价一部电影，你更强调：", dim: "TF", options: [
-    { text: "剧情逻辑是否严密、有没有漏洞", value: "T" },
-    { text: "情感是否动人、人物有没有共鸣", value: "F" }
+  { text: "评价一部电影，你更看重：", dim: "TF", options: [
+    { label: "A", text: "剧情逻辑是否严密、有没有漏洞和bug", value: "T", weight: 3 },
+    { label: "B", text: "逻辑大致通顺就行，关键看有没有道理", value: "T", weight: 1 },
+    { label: "C", text: "打动人最重要，逻辑有小瑕疵也可以接受", value: "F", weight: 1 },
+    { label: "D", text: "情绪对了什么都对，不在乎情节是否严丝合缝", value: "F", weight: 3 }
   ]},
-  { text: "同事犯了错误影响进度，你会：", dim: "TF", options: [
-    { text: "直接指出问题，讨论怎么改进", value: "T" },
-    { text: "先考虑对方的感受，委婉提出", value: "F" }
+  { text: "同事犯了错影响项目进度，你会：", dim: "TF", options: [
+    { label: "A", text: "立刻指出问题所在，直接聊怎么改进", value: "T", weight: 3 },
+    { label: "B", text: "客观分析失误原因，温和但明确地指出来", value: "T", weight: 1 },
+    { label: "C", text: "私下找对方委婉提出，避免伤自尊", value: "F", weight: 1 },
+    { label: "D", text: "默默帮忙补救，不想让对方有压力", value: "F", weight: 3 }
   ]},
-  { text: "收到一份生日礼物，你最在意：", dim: "TF", options: [
-    { text: "实用不实用、性价比如何", value: "T" },
-    { text: "对方有没有用心、有没有心意", value: "F" }
+  { text: "收礼物时，你潜意识里最在意：", dim: "TF", options: [
+    { label: "A", text: "实用价值和性价比，不实用的东西很浪费", value: "T", weight: 3 },
+    { label: "B", text: "挺实用的就好，不太在意价格和心意", value: "T", weight: 1 },
+    { label: "C", text: "知道对方用心挑了，心里就暖暖的", value: "F", weight: 1 },
+    { label: "D", text: "哪怕一束野花，只要用心就是最好的礼物", value: "F", weight: 3 }
   ]},
-  { text: "你是哪种类型的领导？", dim: "TF", options: [
-    { text: "以结果为导向，对事不对人", value: "T" },
-    { text: "以人为本，关心团队成员成长", value: "F" }
+  { text: "作为领导，你的风格更接近：", dim: "TF", options: [
+    { label: "A", text: "结果导向，对事不对人，公平但有距离", value: "T", weight: 3 },
+    { label: "B", text: "高标准严要求，但也重视团队能力建设", value: "T", weight: 1 },
+    { label: "C", text: "人性化管理，关心每个人的发展和状态", value: "F", weight: 1 },
+    { label: "D", text: "以团队凝聚力和归属感为核心来驱动", value: "F", weight: 3 }
   ]},
 
-  // ===== J/P 维度 (8题) =====
-  { text: "面对截止日期，你通常：", dim: "JP", options: [
-    { text: "提前做计划，分阶段逐步完成", value: "J" },
-    { text: "截止前冲刺，压力激发创造力", value: "P" }
+  // ===== J/P 维度 (8题，每题 A/B→J  C/D→P) =====
+  { text: "面对截止日期，你通常怎么做？", dim: "JP", options: [
+    { label: "A", text: "提前三周做规划表，每天按进度执行", value: "J", weight: 3 },
+    { label: "B", text: "大致计划一下，按时推进不做太细致", value: "J", weight: 1 },
+    { label: "C", text: "前期随性，最后几天集中火力冲刺", value: "P", weight: 1 },
+    { label: "D", text: "靠DDL是第一生产力，压力越大效率越高", value: "P", weight: 3 }
   ]},
-  { text: "工作日早晨，你更喜欢：", dim: "JP", options: [
-    { text: "按计划行事，一天安排得明明白白", value: "J" },
-    { text: "看心情决定今天做什么", value: "P" }
+  { text: "工作日的早晨，你倾向哪种方式开始？", dim: "JP", options: [
+    { label: "A", text: "按计划表精确执行，每个小时都有安排", value: "J", weight: 3 },
+    { label: "B", text: "列出今天要做的几件事，有个大致规划", value: "J", weight: 1 },
+    { label: "C", text: "看心情决定，没有固定的每日计划", value: "P", weight: 1 },
+    { label: "D", text: "完全随机，今天想干啥干啥，不受计划约束", value: "P", weight: 3 }
   ]},
-  { text: "桌面或文件的整理情况是：", dim: "JP", options: [
-    { text: "井井有条，每样东西都有位置", value: "J" },
-    { text: "随性摆放，但我知道东西在哪", value: "P" }
+  { text: "你的桌面或工作区通常是：", dim: "JP", options: [
+    { label: "A", text: "井井有条，每一件东西都有固定位置", value: "J", weight: 3 },
+    { label: "B", text: "基本整洁，偶尔会乱但会定期整理", value: "J", weight: 1 },
+    { label: "C", text: "随性摆放，乱中有序，我找得到就行", value: "P", weight: 1 },
+    { label: "D", text: "乱成一团但很自在，整理反而找不到东西", value: "P", weight: 3 }
   ]},
   { text: "做决定时，你更偏向：", dim: "JP", options: [
-    { text: "尽快敲定，不想一直悬着", value: "J" },
-    { text: "保持开放，说不定有更好的选择", value: "P" }
+    { label: "A", text: "信息够了就立刻拍板，不喜欢悬着", value: "J", weight: 3 },
+    { label: "B", text: "稍微多考虑一下，但不喜欢拖太久", value: "J", weight: 1 },
+    { label: "C", text: "多留几个选项，走走看看再做最终判断", value: "P", weight: 1 },
+    { label: "D", text: "能拖就拖，说不定下一秒就有更好的选择", value: "P", weight: 3 }
   ]},
-  { text: "你对变化的感受是：", dim: "JP", options: [
-    { text: "变化让人不安，喜欢稳定可预期", value: "J" },
-    { text: "变化带来新鲜感，一成不变才无聊", value: "P" }
+  { text: "面对变化，你的态度是：", dim: "JP", options: [
+    { label: "A", text: "变化让人焦虑，稳定和可预期才安心", value: "J", weight: 3 },
+    { label: "B", text: "可以接受小幅变化，但不要太频繁", value: "J", weight: 1 },
+    { label: "C", text: "有变化挺好的，给生活加点料", value: "P", weight: 1 },
+    { label: "D", text: "拥抱变化！一成不变才是真的折磨", value: "P", weight: 3 }
   ]},
-  { text: "朋友临时叫你出去玩，你：", dim: "JP", options: [
-    { text: "今天没安排这事啊，有点纠结", value: "J" },
-    { text: "太棒了说走就走，计划随时可调整", value: "P" }
+  { text: "朋友突然约你今晚出去玩，你的反应：", dim: "JP", options: [
+    { label: "A", text: "啊不行，今晚已经有安排了呢", value: "J", weight: 3 },
+    { label: "B", text: "让我看看日程……好的今晚没什么要紧事", value: "J", weight: 1 },
+    { label: "C", text: "哎呀行啊，反正也没啥特别计划", value: "P", weight: 1 },
+    { label: "D", text: "走起！说走就走最开心了", value: "P", weight: 3 }
   ]},
-  { text: "购物时，你更像：", dim: "JP", options: [
-    { text: "列好清单直奔目标，买完就走", value: "J" },
-    { text: "逛逛看看，说不定发现意外惊喜", value: "P" }
+  { text: "购物时，你的风格更像：", dim: "JP", options: [
+    { label: "A", text: "提前列好购物清单，直奔货架拿完就走", value: "J", weight: 3 },
+    { label: "B", text: "心里大概有数要买什么，顺便逛逛", value: "J", weight: 1 },
+    { label: "C", text: "逛逛看看，说不定会发现意外惊喜", value: "P", weight: 1 },
+    { label: "D", text: "进去随便逛，看到喜欢就买，从不定计划", value: "P", weight: 3 }
   ]},
-  { text: "哪种状态更让你满意？", dim: "JP", options: [
-    { text: "任务清空那一刻的完成感和秩序感", value: "J" },
-    { text: "随时有新的可能、不被约束的自由感", value: "P" }
+  { text: "哪种状态让你更满足？", dim: "JP", options: [
+    { label: "A", text: "所有事按计划完成，list全部打勾的那一刻", value: "J", weight: 3 },
+    { label: "B", text: "事情基本按预期推进，没出什么大岔子", value: "J", weight: 1 },
+    { label: "C", text: "今天过得自由充实，虽然不是按计划来的", value: "P", weight: 1 },
+    { label: "D", text: "不被任何框框限制，自由自在最快乐", value: "P", weight: 3 }
   ]},
 ];
 
@@ -259,6 +325,7 @@ const typeData = {
 
 // ========== 状态 ==========
 let currentQ = 0;
+// 加权得分：各极得分累加（A=+3, B=+1, C=+1, D=+3）
 let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
 
 // ========== 页面切换 ==========
@@ -287,8 +354,8 @@ function renderQ() {
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "opt";
-    btn.textContent = opt.text;
-    btn.addEventListener("click", () => selectOption(opt.value));
+    btn.innerHTML = `<span class="opt-label">${opt.label}</span><span>${opt.text}</span>`;
+    btn.addEventListener("click", () => selectOption(opt.value, opt.weight));
     container.appendChild(btn);
   });
 
@@ -298,9 +365,9 @@ function renderQ() {
   card.style.animation = "fadeIn 0.35s ease";
 }
 
-// ========== 选择答案 ==========
-function selectOption(value) {
-  scores[value]++;
+// ========== 选择答案（加权计分） ==========
+function selectOption(value, weight) {
+  scores[value] += weight;
   currentQ++;
   if (currentQ < questions.length) {
     renderQ();
@@ -309,28 +376,27 @@ function selectOption(value) {
   }
 }
 
-// ========== 判断人格类型 ==========
-// 评分算法：每个维度 8 题，每题为某个方向加 1 分
-// 百分比 = 该方向得分 / 该维度总题数 × 100%
-// 平局处理：倾向 I, N, F, P（社会中相对少数）
+// ========== 加权计算人格类型 ==========
+// 每个维度 8 题 × 每题 max weight 3 = 每个极最多 24 分
+// 百分比 = 该极得分 / 两极总得分 × 100%
+// 平局（4 vs 4 原始票数相等时）倾向 I、N、F、P
 function calcType() {
   const dims = [
-    { a: "E", b: "I", total: 8 },
-    { a: "S", b: "N", total: 8 },
-    { a: "T", b: "F", total: 8 },
-    { a: "J", b: "P", total: 8 },
+    { a: "E", b: "I" },
+    { a: "S", b: "N" },
+    { a: "T", b: "F" },
+    { a: "J", b: "P" },
   ];
 
   let type = "";
   const pcts = {};
   dims.forEach(d => {
-    const pct = Math.round((scores[d.a] / d.total) * 100);
+    const pct = Math.round((scores[d.a] / (scores[d.a] + scores[d.b])) * 100);
     pcts[d.a] = pct;
     pcts[d.b] = 100 - pct;
-    // 得分高的方向胜出，平局倾向 I/N/F/P
     if (scores[d.a] > scores[d.b]) type += d.a;
     else if (scores[d.a] < scores[d.b]) type += d.b;
-    else type += d.b; // 平局 -> I, N, F, P
+    else type += d.b; // 平局 → I, N, F, P
   });
 
   return { type, pcts };
@@ -356,7 +422,7 @@ function showResult() {
 
   // 评分详情
   document.getElementById("scoringHint").textContent =
-    "(每个维度 8 题，百分比 = 该方向得分 / 8 × 100%，平局倾向少数方向 I/N/F/P)";
+    "(加权计分 A=3分  B=1分  C=1分  D=3分  ·  每维度 8 题范围 0~24 分  ·  平局倾向 I/N/F/P)";
 
   const bars = document.getElementById("resultBars");
   bars.innerHTML = "";
